@@ -10,7 +10,8 @@
   "dependencies": {
     "express": "^4.17.2",
     "sqlite3": "^5.0.2",
-    "sqlite": "^4.0.23"
+    "sqlite": "^4.0.23",
+    "jsonwebtoken": "^8.5.1"
   },
   "author": "",
   "license": "ISC"
