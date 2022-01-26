@@ -6,6 +6,7 @@ const dbManager = require("./database")
 const jwt = require('jsonwebtoken')
 const key = require('./keys')
 const keys = require('./keys')
+const hashMap = require("./hashMap.js")
 
 var db = {}
 var userHashMap = {}
@@ -120,12 +121,11 @@ var server = app.listen(8081, async function () {
 
 function getUserHashMap(authToken){
    const userId = getUserIdFromToken(authToken)
-   console.log(userId)
 
    if(userHashMap[userId] == null){
-      userHashMap[userId] = require("./hashMap")
+      userHashMap[userId] = new hashMap([], userId)
    }
-   console.log(userHashMap[userId].getAll())
+
    return userHashMap[userId]
 }
 
