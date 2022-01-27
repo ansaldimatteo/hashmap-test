@@ -3,10 +3,11 @@ const crypto = require("crypto")
 
 class hashMap{
 
-    constructor(keyValueArray, userId){
+    constructor(keyValueArray, userId, db){
         this.data = keyValueArray
         this.currentUserId = userId
         //compute value of n
+        this.db = db
         this.n = 64
         while(this.n < keyValueArray.length){
             this.n = this.n * 2
@@ -14,26 +15,36 @@ class hashMap{
     }
 
 
-    add = function (key, value) {
+    add = async function (key, value) {
         var index = this.getIndex(key)
         if(this.data[index] == null || this.data[index]?.key == key){
             this.data[index] = {
                 "key":key,
                 "value":value
             }
-            
+
+            const result = await this.db.run(`
+            INSERT OR REPLACE INTO hashmap_table (userID, hashKey, value)
+            VALUES (?,?,?);
+            `, this.currentUserId, key, value)
+
         }else{
             //collision
             this.manageCollision(key, value)
         }
-        
+
         return this.data[this.getIndex(key)]
     }
 
-    deleteValue = function (key) {
+    deleteValue = async function (key) {
         var index = this.getIndex(key)
         this.data[index] = null
-        return this.data
+
+        const result = await this.db.run(`
+            DELETE FROM hashmap_table
+            WHERE userID = ? AND hashKey = ?;
+            `, this.currentUserId, key)
+        return 0
     }
 
     get = function (key) {
@@ -47,7 +58,7 @@ class hashMap{
             if(element == null){
                 return
             }
-            
+
             returnMap.push(element)
         })
         return returnMap
@@ -69,7 +80,7 @@ class hashMap{
             if(element == null){
                 return
             }
-            
+
             var newIndex = this.getIndex(element.key)
             newData[newIndex] = {
                 "key":element.key,

@@ -6,14 +6,24 @@ const dbManager = require("./database")
 const jwt = require('jsonwebtoken')
 const key = require('./keys')
 const keys = require('./keys')
+const { body, validationResult } = require('express-validator')
 const hashMap = require("./hashMap.js")
 
 var db = {}
-var userHashMap = {}
+var userHashMap = []
+var users = []
 app.use(express.json())
 
 //LOGIN FUNCTIONS ------
-app.post('/signup/', async function(req, res) {
+app.post('/signup/',
+body('userId').isString().trim().escape(),
+body('password').isLength({ min: 8 }),
+async function(req, res) {
+
+   const errors = validationResult(req);
+   if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+   }
    const userId = req.body.userId
    const password = req.body.password
 
@@ -28,11 +38,19 @@ app.post('/signup/', async function(req, res) {
          "userId":userId
       });
    }
-   
+
    res.status(403).send()
 })
 
-app.post('/signin/', async function(req, res){
+app.post('/signin/',
+body('userId').isString().trim().escape(),
+body('password').isLength({ min: 8 }).trim().escape(),
+async function(req, res){
+
+   const errors = validationResult(req);
+   if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+   }
    const userId = req.body.userId
    const password = req.body.password
 
@@ -66,10 +84,10 @@ app.post('/signin/', async function(req, res){
 app.use(async function(req, res, next) {
 
    if (!req.headers.authorization) {
-     return res.status(403).json({ error: 'No credentials sent!' })
+      return res.status(403).json({ error: 'No credentials sent!' })
    }
    const tokenVerified = await verifyToken(req.headers.authorization)
-   
+
    if(tokenVerified == false){
       console.log("token verification failed")
       return res.status(403).json({ error: 'Please login again.' })
@@ -79,54 +97,72 @@ app.use(async function(req, res, next) {
 })
 
 app.get('/hashMap/', async function (req, res) {
-   var hash = getUserHashMap(req.headers.authorization)
+   const userId = getUserIdFromToken(req.headers.authorization)
+   var hash = getUserHashMap(userId)
    res.send(hash.getAll());
 })
 
 app.get('/hashMap/:key', function (req, res) {
-   var hash = getUserHashMap(req.headers.authorization)
+   const userId = getUserIdFromToken(req.headers.authorization)
+   var hash = getUserHashMap(userId)
    var value = hash.get(req.params.key)
    res.send({
       "value":value
    });
 })
 
-app.put('/hashMap/:key', function(req, res) {
-   var hash = getUserHashMap(req.headers.authorization)
+app.put('/hashMap/:key',
+body('value').isString().trim().escape(),
+function(req, res) {
+
+   const errors = validationResult(req);
+   if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+   }
+   const userId = getUserIdFromToken(req.headers.authorization)
+   var hash = getUserHashMap(userId)
    var entry = hash.add(req.params.key, req.body.value)
    res.status(201).send(entry);
 });
 
 app.delete('/hashMap/:key', function(req, res) {
-   var hash = getUserHashMap(req.headers.authorization)
-   var array = hash.delete(req.params.key)
-   res.status(200)
+   const userId = getUserIdFromToken(req.headers.authorization)
+   var hash = getUserHashMap(userId)
+   var array = hash.deleteValue(req.params.key)
+   res.status(200).send()
 });
 
-var server = app.listen(8081, async function () {
+var server = app.listen(8082, async function () {
    var host = server.address().address
    var port = server.address().port
 
    db = await dbManager.getDB()
 
-   //await db.exec('INSERT INTO hashmap_table (userID, hashIndex, hashKey, value)VALUES (1, 1, "testKey", "testValue");')
-   const value = await db.get('SELECT * FROM hashmap_table;')
-   console.log(value)
    //initialize hash maps from db
-   //console.log(hash.add("val5", "val2"))
+   loadHashMaps()
+
    console.log("Example app listening at http://%s:%s", host, port)
 })
 
 // UTILITIES -----------
 
-function getUserHashMap(authToken){
-   const userId = getUserIdFromToken(authToken)
+function getUserHashMap(userId){
+
 
    if(userHashMap[userId] == null){
-      userHashMap[userId] = new hashMap([], userId)
+      userHashMap[userId] = new hashMap([], userId, db)
+      users.push(userId)
    }
 
    return userHashMap[userId]
+}
+
+async function loadHashMaps(){
+   const data = await db.all(`SELECT * FROM hashmap_table`)
+   data.forEach(datapoint => {
+      const hash = getUserHashMap(datapoint.userID)
+      hash.add(datapoint.hashKey, datapoint.value)
+   })
 }
 
 async function verifyToken(token){
@@ -135,15 +171,15 @@ async function verifyToken(token){
       //not properly formatted
       return false
    }
-   
+
    try {
       const decoded = jwt.verify(jwtArray[1], keys.jwtKey)
       return true
    }
-   catch (ex) { 
+   catch (ex) {
       console.log(ex.message)
       return false
-   } 
+   }
 }
 
 function getUserIdFromToken(token){
@@ -152,3 +188,4 @@ function getUserIdFromToken(token){
 
    return decoded.userId
 }
+
