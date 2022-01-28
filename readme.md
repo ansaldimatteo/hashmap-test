@@ -15,7 +15,7 @@ In the project directory, you can run:
 
 ### `npm start`
 
-Interact with the API at http://localhost:3000.
+Interact with the API at http://localhost:8081.
 All calls except for the `/signup` and `/signin` require an `Authorization` header with `Bearer <jwt>`, which is provided with the `/signin` API call.
 
 The API lets users save, update, view and delete string values from a hashmap. Admin users can also view a list of the users, and view and delete values from other user's hashmaps.
