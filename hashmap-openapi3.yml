@@ -1,0 +1,220 @@
+openapi: '3.0.2'
+info:
+  title: Hashmap API
+  version: '1.0'
+servers:
+  - url: http://localhost:8081
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+paths:
+  /signup:
+    post:
+      description: Create a new user in the system
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - userId
+                - password
+              properties:
+                userId:
+                  type: string
+                password:
+                  type: string
+                admin:
+                  type: boolean
+      responses:
+        '201':
+          description: User created
+        '400':
+          description: Wrong parameters
+
+  /signin:
+    post:
+      description: Sign in to the system
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - userId
+                - password
+              properties:
+                userId:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: User created
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJ1c2VyNSIsImFkbWluIjoxLCJpYXQiOjE2NDMzNTk5NzcsImV4cCI6MTY0MzM2MzU3N30.1dpPFH0YRh23tFJcXo04R7rdMbaKrvXVDUEmR3XHvww
+        '401':
+          description: Wrong parameters or wrong password
+
+  /hashMap:
+    get:
+      description: Get your user's complete hashmap
+      responses:
+        '200':
+          description: User hashmap
+          content:
+            application/json:
+              schema:
+                type: array
+                properties:
+                  key:
+                    type: string
+                  value:
+                    type: string
+                example: [{"key":"user4Key","value":"testValue99-hello"},{"key":"1","value":"testValue99-hello-hello"}]
+        '401':
+          description: Please login again
+      security:
+      - bearerAuth: []
+
+  /hashMap/{key}:
+    get:
+      description: Get item from hashmap
+      responses:
+        '200':
+          description: User hashmap
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    type: object
+                example: {"value":"testValue99-hello"}
+        '401':
+          description: Please login again
+      security:
+      - bearerAuth: []
+    put:
+      description: 'Add item to hashmap'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - value
+              properties:
+                value:
+                  type: string
+      responses:
+        '201':
+          description: Item added
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    type: object
+                example: {"key": "extraKey","value":"testValue99-hello"}
+        '401':
+          description: Please login again
+      security:
+      - bearerAuth: []
+    delete:
+      description: Delete item from hashmap
+      responses:
+        '200':
+          description: Item deleted
+        '401':
+          description: Please login again
+      security:
+      - bearerAuth: []
+
+  /user:
+    get:
+      description: Admin function, get the list of users
+      responses:
+        '200':
+          description: User list
+          content:
+            application/json:
+              schema:
+                type: array
+                properties:
+                  value:
+                    type: string
+                example: ["user4","user5"]
+        '401':
+          description: Please login again
+        '403':
+          description: User is not an admin
+      security:
+      - bearerAuth: []
+
+  /user/{userId}/hashMap:
+    get:
+      description: Admin function - Get a user's complete hashmap
+      responses:
+        '200':
+          description: User hashmap
+          content:
+            application/json:
+              schema:
+                type: array
+                properties:
+                  key:
+                    type: string
+                  value:
+                    type: string
+                example: [{"key":"user4Key","value":"testValue99-hello"},{"key":"1","value":"testValue99-hello-hello"}]
+        '401':
+          description: Please login again
+        '403':
+          description: User is not an admin
+      security:
+      - bearerAuth: []
+
+  /user/{userId}/hashMap/{key}:
+    get:
+      description: Admin function - get item from user's hashmap
+      responses:
+        '200':
+          description: User hashmap
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    type: object
+                example: {"value":"testValue99-hello"}
+        '401':
+          description: Please login again
+        '403':
+          description: User is not an admin
+      security:
+      - bearerAuth: []
+    delete:
+      description: Delete item from hashmap
+      responses:
+        '200':
+          description: Item deleted
+        '401':
+          description: Please login again
+        '403':
+          description: User is not an admin
+      security:
+      - bearerAuth: []

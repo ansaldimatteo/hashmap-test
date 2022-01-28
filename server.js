@@ -46,7 +46,7 @@ async function(req, res) {
       return
    }
 
-   res.status(403).send()
+   res.status(400).send()
 })
 
 app.post('/signin/',
@@ -99,7 +99,7 @@ app.use(async function(req, res, next) {
 
    if(tokenVerified == false){
       console.log("token verification failed")
-      return res.status(403).json({ error: 'Please login again.' })
+      return res.status(401).json({ error: 'Please login again.' })
    }
 
    next()
@@ -165,7 +165,7 @@ app.get('/user/', async function (req, res) {
       res.status(200).send(users)
    }
 
-   res.status(401).send()
+   res.status(403).send()
 
 })
 
@@ -179,7 +179,7 @@ app.get('/user/:userId/hashMap/', async function (req, res) {
       return
    }
 
-   res.status(401).send()
+   res.status(403).send()
 
 })
 
@@ -196,7 +196,7 @@ app.get('/user/:userId/hashMap/:key', async function (req, res) {
       return
    }
 
-   res.status(401).send()
+   res.status(403).send()
 })
 
 app.delete('/user/:userId/hashMap/:key', async function(req, res) {
@@ -209,10 +209,10 @@ app.delete('/user/:userId/hashMap/:key', async function(req, res) {
       res.status(200).send()
       return
    }
-   res.status(401).send()
+   res.status(403).send()
 })
 
-var server = app.listen(8082, async function () {
+var server = app.listen(8081, async function () {
    var host = server.address().address
    var port = server.address().port
 
