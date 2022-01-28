@@ -10,10 +10,9 @@ module.exports = {
         await db.run(`
             CREATE TABLE IF NOT EXISTS hashmap_table (
                 userID VARCHAR NOT NULL,
-                hashIndex INTEGER NOT NULL,
                 hashKey VARCHAR NOT NULL,
                 value VARCHAR NOT NULL,
-                PRIMARY KEY (userID, hashIndex)
+                PRIMARY KEY (userID, hashKey)
             );`
         )
         await db.run(`
@@ -22,6 +21,17 @@ module.exports = {
                 hashPwd VARCHAR NOT NULL,
                 admin INTEGER DEFAULT 0,
                 PRIMARY KEY (userID)
+            );`
+        )
+
+        await db.run(`
+            CREATE TABLE IF NOT EXISTS "userlogs" (
+                "id"	INTEGER NOT NULL,
+                "userID"	VARCHAR NOT NULL,
+                "method"	VARCHAR NOT NULL,
+                "path"	VARCHAR NOT NULL,
+                "body"	VARCHAR,
+                PRIMARY KEY("id" AUTOINCREMENT)
             );`
         )
         return db

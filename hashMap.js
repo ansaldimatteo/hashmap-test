@@ -32,7 +32,6 @@ class hashMap{
             //collision
             this.manageCollision(key, value)
         }
-
         return this.data[this.getIndex(key)]
     }
 
